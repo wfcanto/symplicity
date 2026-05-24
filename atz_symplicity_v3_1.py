@@ -112,13 +112,13 @@ def _resolve_codes(area: str, subject_area: str, picklists: dict, school_student
     Returns (final_area, cod_majors, cod_cert).
     Mirrors the original three-attempt cert lookup and two-attempt majors fallback.
     """
-    area = normalize_area_conhecimento(area, subject_area)
-
-    # Cert attempt 1 — after initial corrections
+    # Cert attempt 1 — with raw area, BEFORE corrections (matches original behavior)
     cod_cert = (
         proc_cod(area, picklists["certificates"]) or
         proc_cod(area.upper(), picklists["certificates"])
     )
+
+    area = normalize_area_conhecimento(area, subject_area)
 
     # Majors first try
     cod_majors = (
