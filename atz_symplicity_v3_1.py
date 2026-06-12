@@ -10,6 +10,7 @@ https://www.symplicity.com/developer/csm/getting-started
 """
 
 import json
+import sqlite3
 import sys
 from datetime import datetime
 
@@ -250,16 +251,18 @@ def process_rm_row(row: pd.Series, picklists: dict) -> dict:
 def transform_to_payload(existing_json: dict) -> dict:
     """Extract the degrees structure from a Symplicity student JSON into API payload format."""
     payload = {"degrees": []}
-    for deg in existing_json.get("degrees", []):
+    for deg in existing_json.get("degrees", []) or []:
+        if deg is None:
+            continue
         payload["degrees"].append({
             "visualId":       deg.get("visualId", ""),
             "primary":        "1" if deg.get("primary") else "0",
-            "schools":        [s["id"] for s in deg.get("schools", [])],
-            "award":          deg.get("award", {}).get("id", ""),
+            "schools":        [s["id"] for s in (deg.get("schools") or [])],
+            "award":          (deg.get("award") or {}).get("id", ""),
             "type":           deg.get("type", ""),
-            "mode":           deg.get("mode", {}).get("id", ""),
-            "majors":         [m["id"] for m in deg.get("majors", [])],
-            "minors":         [m["id"] for m in deg.get("minors", [])],
+            "mode":           (deg.get("mode") or {}).get("id", ""),
+            "majors":         [m["id"] for m in (deg.get("majors") or [])],
+            "minors":         [m["id"] for m in (deg.get("minors") or [])],
             "graduationDate": deg.get("graduationDate") or "",
             "campus":         "",
         })
@@ -487,6 +490,17 @@ def main() -> None:
     picklists = load_picklists()
 
     rebuild_cache(DB_PATH)
+
+    with sqlite3.connect(DB_PATH) as _conn:
+        cache_count = _conn.execute("SELECT COUNT(*) FROM jsons").fetchone()[0]
+    print(f"Cache verificado: {cache_count} registros.")
+    if cache_count < 1000:
+        print(
+            f"ABORTANDO: cache com apenas {cache_count} registros. "
+            "Isso indica falha na extração do Symplicity. "
+            "Verifique token/cookie antes de prosseguir."
+        )
+        sys.exit(1)
 
     df = load_rm_data()
 

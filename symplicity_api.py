@@ -14,8 +14,17 @@ def get_picklist(entity: str, field: str, **params) -> list:
 
 def get_all_students(per_page: int = 500) -> list[dict]:
     url = f"{SYMPLICITY_BASE_URL}/students?keywords=&page=1&perPage=1&customFields=1"
-    first = requests.get(url, headers=HTTP_HEADERS).json()
+    first_resp = requests.get(url, headers=HTTP_HEADERS)
+    first_resp.raise_for_status()
+    first = first_resp.json()
     total = first.get("total", 0)
+
+    if total == 0:
+        raise RuntimeError(
+            f"API retornou total=0 ao buscar alunos. "
+            f"Verifique token/cookie. Resposta: {first}"
+        )
+
     total_pages = (total + per_page - 1) // per_page
 
     print(f"Total no Symplicity: {total} | Páginas: {total_pages}")
@@ -24,7 +33,9 @@ def get_all_students(per_page: int = 500) -> list[dict]:
     for page in range(1, total_pages + 1):
         print(f"Extraindo página {page}/{total_pages}")
         page_url = f"{SYMPLICITY_BASE_URL}/students?keywords=&page={page}&perPage={per_page}&customFields=1"
-        data = requests.get(page_url, headers=HTTP_HEADERS).json()
+        page_resp = requests.get(page_url, headers=HTTP_HEADERS)
+        page_resp.raise_for_status()
+        data = page_resp.json()
         students.extend(data.get("models", []))
         time.sleep(1)
 

@@ -30,7 +30,7 @@ _AREA_CONHECIMENTO_CORRECTIONS = {
     "Segurança do Trabalho": "Engenharia de Segurança do Trabalho",
     "Habilidades Pessoais e Sociais no Gerenciamento de Projetos na Engenharia": (
         "Gerenciamento de Projetos na Engenharia"
-    ),
+    )
 }
 
 # Subject-area suffixes (from SUBJECT_AREA split on "/") that override AREA_CONHECIMENTO
@@ -42,6 +42,7 @@ _SUBJECT_AREA_OVERRIDES = {
     "Instalações Prediais: Projetos",
     "Ciências Econômicas",
     "Inteligência Artificial e Ciência de Dados",
+    "Superior de Tecnologia em Análise e Desenvolvimento de Sistemas"
 }
 
 _GENDER_MAP = {"1": "M", "2": "F", "3": "Not"}
