@@ -5,7 +5,7 @@ import sqlite3
 from config import DB_PATH
 
 with sqlite3.connect(DB_PATH) as conn:
-    rows = conn.execute("SELECT json FROM jsons LIMIT 200").fetchall()
+    rows = conn.execute("SELECT json FROM jsons").fetchall()
 
 awards_found = {}
 for (raw,) in rows:
