@@ -44,10 +44,12 @@ from utils import (
 
 def load_picklists() -> dict:
     print("Carregando picklists do Symplicity...")
+    award_list = get_picklist("students", "award")
+    print("AWARD picklist:", [(i["id"], i["value"]) for i in award_list])
     return {
         "mode":          get_picklist("students", "mode"),
         "minors":        get_picklist("students", "minors"),
-        "award":         get_picklist("students", "award"),
+        "award":         award_list,
         "schools":       get_picklist("students", "schools"),
         "majors":        get_picklist("students", "majors"),
         "new_gender":    get_picklist("students", "new_gender"),
@@ -376,24 +378,39 @@ def atz_existing_json(
                 )
 
     if not achou_ra and not alterou and student["degree_mode"] in ("Formado", "Matriculado"):
-        payload["degrees"].append(_build_degree_entry(student, primary="0"))
-        result = _call_api("upd", student, payload, test_mode)
-        alterou = True
-
-        with open(log_atz, "a", encoding="utf-8") as f:
-            _log_degree_change(f, "Inclusão Degree", student, student["program"], result, payload)
-
-        if not result["success"]:
+        if not student["cod_award"]:
             with open(log_erro, "a", encoding="utf-8") as f:
                 f.write(
-                    f"Erro Inclusão Degree >>;{student['school_student_id']};{student['ra']};"
-                    f"{student['fullname']};{result.get('error')};{result.get('response_text')}\n"
+                    f"Erro Inclusão Degree - AWARD não encontrado >>;{student['school_student_id']};{student['ra']};"
+                    f"{student['fullname']};DEGREE_AWARD='{student['degree_award']}' não localizado no picklist\n"
                 )
+        else:
+            payload["degrees"].append(_build_degree_entry(student, primary="0"))
+            result = _call_api("upd", student, payload, test_mode)
+            alterou = True
+
+            with open(log_atz, "a", encoding="utf-8") as f:
+                _log_degree_change(f, "Inclusão Degree", student, student["program"], result, payload)
+
+            if not result["success"]:
+                with open(log_erro, "a", encoding="utf-8") as f:
+                    f.write(
+                        f"Erro Inclusão Degree >>;{student['school_student_id']};{student['ra']};"
+                        f"{student['fullname']};{result.get('error')};{result.get('response_text')}\n"
+                    )
 
     return alterou
 
 
 def atz_new_json(student: dict, log_atz: str, log_erro: str, test_mode: bool) -> bool:
+    if not student["cod_award"]:
+        with open(log_erro, "a", encoding="utf-8") as f:
+            f.write(
+                f"Erro Inclusão completa - AWARD não encontrado >>;{student['school_student_id']};{student['ra']};"
+                f"{student['fullname']};DEGREE_AWARD='{student['degree_award']}' não localizado no picklist\n"
+            )
+        return False
+
     alum = "1" if student["degree_mode"] == "Formado" else "0"
 
     payload = {

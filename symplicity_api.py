@@ -9,7 +9,10 @@ def get_picklist(entity: str, field: str, **params) -> list:
     url = f"{SYMPLICITY_BASE_URL}/picklists/{entity}/{field}"
     response = requests.get(url, headers=HTTP_HEADERS, params=params)
     response.raise_for_status()
-    return response.json()
+    data = response.json()
+    if field == "award":
+        print(f"[DEBUG award] status={response.status_code} type={type(data).__name__} raw={response.text[:300]}")
+    return data if isinstance(data, list) else data.get("data", data.get("models", []))
 
 
 def get_all_students(per_page: int = 500) -> list[dict]:
