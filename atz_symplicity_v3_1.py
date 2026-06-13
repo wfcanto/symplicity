@@ -256,11 +256,18 @@ def transform_to_payload(existing_json: dict) -> dict:
     for deg in existing_json.get("degrees", []) or []:
         if deg is None:
             continue
+        award_id = (deg.get("award") or {}).get("id", "")
+        if not award_id:
+            print(
+                f"DEGREE IGNORADO (award vazio) >> visualId={deg.get('visualId')} "
+                f"type={deg.get('type')} schoolStudentId={existing_json.get('schoolStudentId')}"
+            )
+            continue
         payload["degrees"].append({
             "visualId":       deg.get("visualId", ""),
             "primary":        "1" if deg.get("primary") else "0",
             "schools":        [s["id"] for s in (deg.get("schools") or [])],
-            "award":          (deg.get("award") or {}).get("id", ""),
+            "award":          award_id,
             "type":           deg.get("type", ""),
             "mode":           (deg.get("mode") or {}).get("id", ""),
             "majors":         [m["id"] for m in (deg.get("majors") or [])],
